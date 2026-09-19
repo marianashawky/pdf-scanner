@@ -1,0 +1,39 @@
+name: pdf_scanner
+description: A private, on-device PDF Scanner and Document Studio.
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flutter_riverpod: ^2.6.1
+  google_fonts: ^6.3.2
+  camera: ^0.11.2
+  image_picker: ^1.2.0
+  file_picker: ^8.3.7
+  image: ^4.5.4
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  share_plus: ^10.1.4
+  path_provider: ^2.1.5
+  path: ^1.9.1
+  permission_handler: ^11.4.0
+  shared_preferences: ^2.5.3
+  uuid: ^4.5.1
+  google_mobile_ads: ^5.3.1
+  intl: ^0.20.2
+  flutter_animate: ^4.5.2
+  photo_view: ^0.15.0
+  collection: ^1.19.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
