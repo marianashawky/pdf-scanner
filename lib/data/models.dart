@@ -219,24 +219,32 @@ class AppSettings {
     this.quality = ScanQuality.balanced,
     this.hasOnboarded = false,
     this.saveCount = 0,
+    this.localeCode = 'en',
+    this.autoEnhance = true,
   });
 
   final ThemePreference themeMode;
   final ScanQuality quality;
   final bool hasOnboarded;
   final int saveCount;
+  final String localeCode;
+  final bool autoEnhance;
 
   AppSettings copyWith({
     ThemePreference? themeMode,
     ScanQuality? quality,
     bool? hasOnboarded,
     int? saveCount,
+    String? localeCode,
+    bool? autoEnhance,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
       quality: quality ?? this.quality,
       hasOnboarded: hasOnboarded ?? this.hasOnboarded,
       saveCount: saveCount ?? this.saveCount,
+      localeCode: localeCode ?? this.localeCode,
+      autoEnhance: autoEnhance ?? this.autoEnhance,
     );
   }
 
@@ -245,6 +253,8 @@ class AppSettings {
         'quality': quality.name,
         'hasOnboarded': hasOnboarded,
         'saveCount': saveCount,
+        'localeCode': localeCode,
+        'autoEnhance': autoEnhance,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
@@ -259,6 +269,8 @@ class AppSettings {
       ),
       hasOnboarded: json['hasOnboarded'] as bool? ?? false,
       saveCount: json['saveCount'] as int? ?? 0,
+      localeCode: json['localeCode'] as String? ?? 'en',
+      autoEnhance: json['autoEnhance'] as bool? ?? true,
     );
   }
 }

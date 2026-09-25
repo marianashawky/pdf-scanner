@@ -1,10 +1,11 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/studio_widgets.dart';
 import '../../data/models.dart';
@@ -31,6 +32,8 @@ class _CropAdjustScreenState extends ConsumerState<CropAdjustScreen> {
   var _rotation = 0;
   var _busy = false;
   var _detected = false;
+  Uint8List? _previewBytes;
+  var _previewBusy = false;
 
   @override
   void initState() {
@@ -46,9 +49,37 @@ class _CropAdjustScreenState extends ConsumerState<CropAdjustScreen> {
         _corners = ref.read(imageProcessingProvider).detectDocument(image);
         _detected = true;
       });
+      await _refreshLivePreview();
     } catch (_) {
       setState(() => _detected = true);
     }
+  }
+
+  Future<void> _refreshLivePreview() async {
+    if (_previewBusy) return;
+    setState(() => _previewBusy = true);
+    try {
+      final enhance = ref.read(scanSessionProvider).autoEnhance;
+      final bytes = await ref.read(imageProcessingProvider).processPage(
+            sourcePath: widget.imagePath,
+            corners: _corners,
+            rotation: _rotation,
+            filter: enhance ? ScanFilter.color : ScanFilter.original,
+            quality: ScanQuality.compact,
+            enhance: enhance,
+          );
+      if (!mounted) return;
+      setState(() => _previewBytes = bytes);
+    } catch (_) {
+      // Keep showing the original frame if preview fails.
+    } finally {
+      if (mounted) setState(() => _previewBusy = false);
+    }
+  }
+
+  Future<void> _toggleEnhance() async {
+    ref.read(scanSessionProvider.notifier).toggleEnhance();
+    await _refreshLivePreview();
   }
 
   Future<void> _preview() async {
@@ -96,6 +127,9 @@ class _CropAdjustScreenState extends ConsumerState<CropAdjustScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final enhance = ref.watch(scanSessionProvider).autoEnhance;
+
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
       body: Stack(
@@ -106,8 +140,8 @@ class _CropAdjustScreenState extends ConsumerState<CropAdjustScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                   child: ScreenHeader(
-                    title: 'Adjust scan',
-                    subtitle: 'Drag corners to refine the document.',
+                    title: l10n.adjustScan,
+                    subtitle: l10n.adjustScanSub,
                     leading: CircleIconButton(
                       icon: Icons.arrow_back_rounded,
                       background: Colors.white10,
@@ -119,11 +153,42 @@ class _CropAdjustScreenState extends ConsumerState<CropAdjustScreen> {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 18),
-                    child: _CropCanvas(
-                      imagePath: widget.imagePath,
-                      corners: _corners,
-                      rotation: _rotation,
-                      onChanged: (corners) => setState(() => _corners = corners),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: _CropCanvas(
+                            imagePath: widget.imagePath,
+                            previewBytes: enhance ? _previewBytes : null,
+                            corners: _corners,
+                            rotation: _rotation,
+                            onChanged: (corners) {
+                              setState(() => _corners = corners);
+                            },
+                            onChangedEnd: _refreshLivePreview,
+                          ),
+                        ),
+                        if (enhance)
+                          Positioned(
+                            top: 12,
+                            left: 12,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Text(
+                                l10n.enhance,
+                                style: studioText(
+                                  context: context,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.primaryForeground,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
@@ -133,20 +198,37 @@ class _CropAdjustScreenState extends ConsumerState<CropAdjustScreen> {
                     children: [
                       Row(
                         children: [
-                          _tool('Crop', Icons.crop_rounded, () => setState(() => _corners = QuadCorners.full)),
+                          _tool(
+                            l10n.crop,
+                            Icons.crop_rounded,
+                            false,
+                            () {
+                              setState(() => _corners = QuadCorners.full);
+                              _refreshLivePreview();
+                            },
+                          ),
                           const SizedBox(width: 10),
-                          _tool('Rotate', Icons.rotate_90_degrees_ccw_rounded, () {
-                            setState(() => _rotation = (_rotation + 90) % 360);
-                          }),
+                          _tool(
+                            l10n.rotate,
+                            Icons.rotate_90_degrees_ccw_rounded,
+                            false,
+                            () {
+                              setState(() => _rotation = (_rotation + 90) % 360);
+                              _refreshLivePreview();
+                            },
+                          ),
                           const SizedBox(width: 10),
-                          _tool('Enhance', Icons.auto_fix_high_rounded, () {
-                            ref.read(scanSessionProvider.notifier).toggleEnhance();
-                          }),
+                          _tool(
+                            l10n.enhance,
+                            Icons.auto_fix_high_rounded,
+                            enhance,
+                            _toggleEnhance,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 14),
                       StudioButton(
-                        label: 'Preview scan  >',
+                        label: l10n.previewScan,
                         enabled: _detected,
                         onPressed: _preview,
                       ),
@@ -156,16 +238,16 @@ class _CropAdjustScreenState extends ConsumerState<CropAdjustScreen> {
               ],
             ),
           ),
-          if (_busy) const LoadingScrim(label: 'Polishing page…'),
+          if (_busy) LoadingScrim(label: l10n.polishingPage),
         ],
       ),
     );
   }
 
-  Widget _tool(String label, IconData icon, VoidCallback onTap) {
+  Widget _tool(String label, IconData icon, bool active, VoidCallback onTap) {
     return Expanded(
       child: Material(
-        color: Colors.white,
+        color: active ? AppColors.primary : Colors.white,
         borderRadius: BorderRadius.circular(24),
         child: InkWell(
           onTap: onTap,
@@ -174,9 +256,16 @@ class _CropAdjustScreenState extends ConsumerState<CropAdjustScreen> {
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
               children: [
-                Icon(icon, color: AppColors.paperInk),
+                Icon(icon, color: active ? AppColors.primaryForeground : AppColors.paperInk),
                 const SizedBox(height: 4),
-                Text(label, style: GoogleFonts.manrope(fontWeight: FontWeight.w700, color: AppColors.paperInk)),
+                Text(
+                  label,
+                  style: studioText(
+                    context: context,
+                    fontWeight: FontWeight.w700,
+                    color: active ? AppColors.primaryForeground : AppColors.paperInk,
+                  ),
+                ),
               ],
             ),
           ),
@@ -192,12 +281,16 @@ class _CropCanvas extends StatelessWidget {
     required this.corners,
     required this.rotation,
     required this.onChanged,
+    this.previewBytes,
+    this.onChangedEnd,
   });
 
   final String imagePath;
+  final Uint8List? previewBytes;
   final QuadCorners corners;
   final int rotation;
   final ValueChanged<QuadCorners> onChanged;
+  final VoidCallback? onChangedEnd;
 
   @override
   Widget build(BuildContext context) {
@@ -210,7 +303,9 @@ class _CropCanvas extends StatelessWidget {
               Positioned.fill(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(28),
-                  child: Image.file(File(imagePath), fit: BoxFit.contain),
+                  child: previewBytes != null
+                      ? Image.memory(previewBytes!, fit: BoxFit.contain)
+                      : Image.file(File(imagePath), fit: BoxFit.contain),
                 ),
               ),
               Positioned.fill(
@@ -231,6 +326,7 @@ class _CropCanvas extends StatelessWidget {
                       ).clamp();
                       onChanged(corners.copyWithPoint(index, next));
                     },
+                    onPanEnd: (_) => onChangedEnd?.call(),
                     child: Container(
                       width: 32,
                       height: 32,

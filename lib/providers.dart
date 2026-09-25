@@ -69,6 +69,16 @@ class SettingsNotifier extends Notifier<AppSettings> {
     await _persist();
   }
 
+  Future<void> setLocaleCode(String localeCode) async {
+    state = state.copyWith(localeCode: localeCode);
+    await _persist();
+  }
+
+  Future<void> setAutoEnhance(bool enabled) async {
+    state = state.copyWith(autoEnhance: enabled);
+    await _persist();
+  }
+
   Future<void> completeOnboarding() async {
     state = state.copyWith(hasOnboarded: true);
     await _persist();
@@ -138,12 +148,22 @@ class ScanSessionNotifier extends Notifier<ScanSession> {
   static const _uuid = Uuid();
 
   @override
-  ScanSession build() => const ScanSession();
+  ScanSession build() {
+    final autoEnhance = ref.read(settingsProvider).autoEnhance;
+    return ScanSession(autoEnhance: autoEnhance);
+  }
 
-  void reset() => state = const ScanSession();
+  void reset() {
+    final autoEnhance = ref.read(settingsProvider).autoEnhance;
+    state = ScanSession(autoEnhance: autoEnhance);
+  }
 
   void toggleEnhance() {
     state = state.copyWith(autoEnhance: !state.autoEnhance);
+  }
+
+  void setEnhance(bool enabled) {
+    state = state.copyWith(autoEnhance: enabled);
   }
 
   void setCurrent(int index) {

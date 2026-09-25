@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 
 class StudioNavBar extends StatelessWidget {
@@ -18,6 +18,10 @@ class StudioNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = StudioPalette.of(context);
+    final l10n = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final idle = isDark ? const Color(0xFFB7C2C9) : const Color(0xFF6B7780);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: SizedBox(
@@ -43,33 +47,38 @@ class StudioNavBar extends StatelessWidget {
                 children: [
                   _NavItem(
                     icon: Icons.home_outlined,
-                    label: 'Home',
+                    label: l10n.home,
                     selected: index == 0,
+                    idle: idle,
                     onTap: () => onSelect(0),
                   ),
                   _NavItem(
                     icon: Icons.crop_free_rounded,
-                    label: 'Scan',
+                    label: l10n.scan,
                     selected: false,
+                    idle: idle,
                     hidden: true,
                     onTap: onScan,
                   ),
                   _NavItem(
                     icon: Icons.insert_drive_file_outlined,
-                    label: 'Files',
+                    label: l10n.files,
                     selected: index == 1,
+                    idle: idle,
                     onTap: () => onSelect(1),
                   ),
                   _NavItem(
                     icon: Icons.auto_fix_high_outlined,
-                    label: 'Tools',
+                    label: l10n.tools,
                     selected: index == 2,
+                    idle: idle,
                     onTap: () => onSelect(2),
                   ),
                   _NavItem(
                     icon: Icons.settings_outlined,
-                    label: 'Settings',
+                    label: l10n.settings,
                     selected: index == 3,
+                    idle: idle,
                     onTap: () => onSelect(3),
                   ),
                 ],
@@ -107,6 +116,7 @@ class _NavItem extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    required this.idle,
     this.hidden = false,
   });
 
@@ -114,11 +124,12 @@ class _NavItem extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final Color idle;
   final bool hidden;
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppColors.primary : const Color(0xFF8A949B);
+    final color = selected ? AppColors.primary : idle;
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -132,7 +143,8 @@ class _NavItem extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 label,
-                style: GoogleFonts.manrope(
+                style: studioText(
+                  context: context,
                   fontSize: 11,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   color: color,

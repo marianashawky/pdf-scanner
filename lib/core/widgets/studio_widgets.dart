@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../data/models.dart';
 import '../constants.dart';
+import '../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../utils/formatters.dart';
 
@@ -72,7 +73,8 @@ class ScreenHeader extends StatelessWidget {
               if (eyebrow != null)
                 Text(
                   eyebrow!,
-                  style: GoogleFonts.manrope(
+                  style: studioText(
+                    context: context,
                     fontSize: 13,
                     color: palette.mutedForeground,
                     fontWeight: FontWeight.w500,
@@ -80,7 +82,8 @@ class ScreenHeader extends StatelessWidget {
                 ),
               Text(
                 title,
-                style: GoogleFonts.manrope(
+                style: studioText(
+                  context: context,
                   fontSize: 32,
                   height: 1.05,
                   fontWeight: FontWeight.w700,
@@ -92,7 +95,8 @@ class ScreenHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   subtitle!,
-                  style: GoogleFonts.manrope(
+                  style: studioText(
+                    context: context,
                     fontSize: 14,
                     height: 1.4,
                     color: palette.mutedForeground,
@@ -179,10 +183,11 @@ class StudioButton extends StatelessWidget {
           child: Text(
             label,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.manrope(
+            style: studioText(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: foreground,
+              context: context,
             ),
           ),
         ),
@@ -300,7 +305,8 @@ class SectionTitle extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: GoogleFonts.manrope(
+            style: studioText(
+              context: context,
               fontSize: 22,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.6,
@@ -329,6 +335,7 @@ class DocumentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = StudioPalette.of(context);
+    final l10n = AppLocalizations.of(context);
     return StudioCard(
       onTap: onTap,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -346,7 +353,8 @@ class DocumentTile extends StatelessWidget {
                   document.fileName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.manrope(
+                  style: studioText(
+                    context: context,
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: palette.cardForeground,
@@ -354,10 +362,11 @@ class DocumentTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'PDF · ${pageLabel(document.pageCount)} · ${formatBytes(document.sizeBytes)}',
-                  style: GoogleFonts.manrope(
+                  'PDF · ${l10n.pageLabel(document.pageCount)} · ${formatBytes(document.sizeBytes)}',
+                  style: studioText(
+                    context: context,
                     fontSize: 12,
-                    color: palette.cardForeground.withValues(alpha: 0.55),
+                    color: palette.cardForeground.withValues(alpha: 0.72),
                   ),
                 ),
               ],
@@ -365,16 +374,17 @@ class DocumentTile extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            formatRelativeDate(document.updatedAt),
-            style: GoogleFonts.manrope(
+            formatRelativeDate(document.updatedAt, l10n),
+            style: studioText(
+              context: context,
               fontSize: 12,
-              color: palette.cardForeground.withValues(alpha: 0.45),
+              color: palette.cardForeground.withValues(alpha: 0.65),
             ),
           ),
           if (onMenu != null)
             IconButton(
               onPressed: onMenu,
-              icon: Icon(Icons.more_horiz_rounded, color: palette.cardForeground.withValues(alpha: 0.5)),
+              icon: Icon(Icons.more_horiz_rounded, color: palette.cardForeground.withValues(alpha: 0.65)),
             ),
         ],
       ),
@@ -402,7 +412,7 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = StudioPalette.of(context);
     return StudioCard(
-      color: palette.muted.withValues(alpha: 0.45),
+      color: palette.muted.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.85 : 0.45),
       child: Column(
         children: [
           IconWell(icon: icon, size: 56, background: AppColors.primary, foreground: AppColors.primaryForeground),
@@ -410,7 +420,8 @@ class EmptyState extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: GoogleFonts.manrope(
+            style: studioText(
+              context: context,
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: palette.foreground,
@@ -420,7 +431,7 @@ class EmptyState extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: GoogleFonts.manrope(fontSize: 13, height: 1.45, color: palette.mutedForeground),
+            style: studioText(context: context, fontSize: 13, height: 1.45, color: palette.mutedForeground),
           ),
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 16),
@@ -514,6 +525,7 @@ class PrivacyBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
@@ -534,8 +546,9 @@ class PrivacyBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Private workspace',
-                  style: GoogleFonts.manrope(
+                  l10n.privateWorkspace,
+                  style: studioText(
+                    context: context,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: AppColors.darkForeground,
@@ -543,8 +556,9 @@ class PrivacyBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Your files never leave this device. Every tool runs locally.',
-                  style: GoogleFonts.manrope(
+                  l10n.privateWorkspaceBody,
+                  style: studioText(
+                    context: context,
                     fontSize: 13,
                     height: 1.35,
                     color: AppColors.darkMutedForeground,
@@ -571,6 +585,7 @@ class FilterSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: ScanFilter.values.map((filter) {
         final selected = filter == value;
@@ -587,9 +602,10 @@ class FilterSelector extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  filter.label,
+                  l10n.filterLabel(filter),
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.manrope(
+                  style: studioText(
+                    context: context,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: selected ? AppColors.primaryForeground : AppColors.paperInk,
@@ -622,7 +638,7 @@ class LoadingScrim extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 label,
-                style: GoogleFonts.manrope(fontWeight: FontWeight.w600, color: AppColors.paperInk),
+                style: studioText(context: context, fontWeight: FontWeight.w600, color: AppColors.paperInk),
               ),
             ],
           ),

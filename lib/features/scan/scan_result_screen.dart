@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:photo_view/photo_view.dart';
 
 import '../../core/constants.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/studio_widgets.dart';
 import '../../providers.dart';
@@ -48,15 +49,22 @@ class _ScanResultScreenState extends ConsumerState<ScanResultScreen> {
     }
   }
 
+  Future<void> _toggleEnhance() async {
+    ref.read(scanSessionProvider.notifier).toggleEnhance();
+    await _reprocess();
+  }
+
   Future<void> _save({required bool shareAfter}) async {
     final session = ref.read(scanSessionProvider);
+    final l10n = AppLocalizations.of(context);
     if (session.pages.isEmpty) return;
     setState(() => _busy = true);
     try {
       final stamp = DateTime.now();
       final document = await ref.read(pdfServiceProvider).createFromImages(
             imagePaths: session.pages.map((page) => page.processedPath).toList(),
-            name: 'Scan ${stamp.month}-${stamp.day} ${stamp.hour}.${stamp.minute.toString().padLeft(2, '0')}',
+            name:
+                '${l10n.scanNamePrefix} ${stamp.month}-${stamp.day} ${stamp.hour}.${stamp.minute.toString().padLeft(2, '0')}',
             source: DocumentSource.scan,
           );
       await ref.read(documentsProvider.notifier).add(document);
@@ -83,6 +91,8 @@ class _ScanResultScreenState extends ConsumerState<ScanResultScreen> {
   Widget build(BuildContext context) {
     final session = ref.watch(scanSessionProvider);
     final current = session.current;
+    final l10n = AppLocalizations.of(context);
+    final enhance = session.autoEnhance;
 
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
@@ -94,8 +104,10 @@ class _ScanResultScreenState extends ConsumerState<ScanResultScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                   child: ScreenHeader(
-                    title: 'Preview',
-                    subtitle: current == null ? 'No pages yet' : 'Page ${session.currentIndex + 1} of ${session.pages.length}',
+                    title: l10n.preview,
+                    subtitle: current == null
+                        ? l10n.noPagesYet
+                        : l10n.pageOf(session.currentIndex + 1, session.pages.length),
                     leading: CircleIconButton(
                       icon: Icons.arrow_back_rounded,
                       background: Colors.white10,
@@ -114,11 +126,11 @@ class _ScanResultScreenState extends ConsumerState<ScanResultScreen> {
                 ),
                 Expanded(
                   child: current == null
-                      ? const Padding(
-                          padding: EdgeInsets.all(22),
+                      ? Padding(
+                          padding: const EdgeInsets.all(22),
                           child: EmptyState(
-                            title: 'No page to preview',
-                            message: 'Capture a document to polish and export it.',
+                            title: l10n.noPagePreview,
+                            message: l10n.captureToPolish,
                           ),
                         )
                       : Padding(
@@ -179,7 +191,7 @@ class _ScanResultScreenState extends ConsumerState<ScanResultScreen> {
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            _mini('Crop', Icons.crop_rounded, () {
+                            _mini(l10n.crop, Icons.crop_rounded, false, () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (_) => CropAdjustScreen(
@@ -190,12 +202,14 @@ class _ScanResultScreenState extends ConsumerState<ScanResultScreen> {
                               );
                             }),
                             const SizedBox(width: 8),
-                            _mini('Rotate', Icons.rotate_90_degrees_ccw_rounded, () async {
+                            _mini(l10n.enhance, Icons.auto_fix_high_rounded, enhance, _toggleEnhance),
+                            const SizedBox(width: 8),
+                            _mini(l10n.rotate, Icons.rotate_90_degrees_ccw_rounded, false, () async {
                               ref.read(scanSessionProvider.notifier).rotateCurrent();
                               await _reprocess();
                             }),
                             const SizedBox(width: 8),
-                            _mini('Delete', Icons.delete_outline_rounded, () {
+                            _mini(l10n.delete, Icons.delete_outline_rounded, false, () {
                               ref.read(scanSessionProvider.notifier).removeAt(session.currentIndex);
                             }),
                           ],
@@ -206,7 +220,7 @@ class _ScanResultScreenState extends ConsumerState<ScanResultScreen> {
                         children: [
                           Expanded(
                             child: StudioButton(
-                              label: 'Save',
+                              label: l10n.save,
                               icon: Icons.download_outlined,
                               primary: false,
                               enabled: current != null,
@@ -216,7 +230,7 @@ class _ScanResultScreenState extends ConsumerState<ScanResultScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: StudioButton(
-                              label: 'Share',
+                              label: l10n.share,
                               icon: Icons.ios_share_rounded,
                               enabled: current != null,
                               onPressed: () => _save(shareAfter: true),
@@ -230,16 +244,16 @@ class _ScanResultScreenState extends ConsumerState<ScanResultScreen> {
               ],
             ),
           ),
-          if (_busy) const LoadingScrim(label: 'Working locally…'),
+          if (_busy) LoadingScrim(label: enhance ? l10n.enhancing : l10n.workingLocally),
         ],
       ),
     );
   }
 
-  Widget _mini(String label, IconData icon, VoidCallback onTap) {
+  Widget _mini(String label, IconData icon, bool active, VoidCallback onTap) {
     return Expanded(
       child: Material(
-        color: Colors.white,
+        color: active ? AppColors.primary : Colors.white,
         borderRadius: BorderRadius.circular(22),
         child: InkWell(
           onTap: onTap,
@@ -248,9 +262,19 @@ class _ScanResultScreenState extends ConsumerState<ScanResultScreen> {
             padding: const EdgeInsets.symmetric(vertical: 14),
             child: Column(
               children: [
-                Icon(icon, color: AppColors.paperInk, size: 20),
+                Icon(icon, color: active ? AppColors.primaryForeground : AppColors.paperInk, size: 20),
                 const SizedBox(height: 4),
-                Text(label, style: const TextStyle(color: AppColors.paperInk, fontWeight: FontWeight.w700, fontSize: 12)),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: studioText(
+                    context: context,
+                    color: active ? AppColors.primaryForeground : AppColors.paperInk,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                  ),
+                ),
               ],
             ),
           ),

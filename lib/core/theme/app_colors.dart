@@ -12,10 +12,10 @@ class AppColors {
   static const danger = Color(0xFFE86A5A);
 
   static const darkBackground = Color(0xFF0C1016);
-  static const darkForeground = Color(0xFFF2F5F6);
-  static const darkMuted = Color(0xFF2A3138);
-  static const darkMutedForeground = Color(0xFF9AA6AE);
-  static const darkBorder = Color(0x1FFFFFFF);
+  static const darkForeground = Color(0xFFF7FAFB);
+  static const darkMuted = Color(0xFF232B33);
+  static const darkMutedForeground = Color(0xFFC8D2D8);
+  static const darkBorder = Color(0x33FFFFFF);
 
   static const lightBackground = Color(0xFFF3F6F7);
   static const lightForeground = Color(0xFF1A2229);
@@ -66,16 +66,16 @@ class StudioPalette extends ThemeExtension<StudioPalette> {
     foreground: AppColors.darkForeground,
     muted: AppColors.darkMuted,
     mutedForeground: AppColors.darkMutedForeground,
-    card: AppColors.paper,
-    cardForeground: AppColors.paperInk,
-    iconWell: AppColors.studio,
-    iconWellForeground: AppColors.paper,
+    card: Color(0xFF171E26),
+    cardForeground: AppColors.darkForeground,
+    iconWell: Color(0xFF222B34),
+    iconWellForeground: AppColors.primary,
     border: AppColors.darkBorder,
     hero: Color(0xFF12181F),
-    navBar: AppColors.navBar,
-    scanButton: Color(0xFF0B0F14),
-    scanIcon: AppColors.primary,
-    softShadow: Color(0x330B1016),
+    navBar: Color(0xFF151C24),
+    scanButton: AppColors.primary,
+    scanIcon: AppColors.primaryForeground,
+    softShadow: Color(0x66000000),
   );
 
   static const light = StudioPalette(

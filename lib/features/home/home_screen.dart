@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/paper_visual.dart';
@@ -21,6 +21,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final palette = StudioPalette.of(context);
+    final l10n = AppLocalizations.of(context);
     final documents = ref.watch(documentsProvider);
     final recent = documents.take(3).toList();
 
@@ -32,8 +33,8 @@ class HomeScreen extends ConsumerWidget {
             sliver: SliverList.list(
               children: [
                 ScreenHeader(
-                  eyebrow: greetingFor(DateTime.now()),
-                  title: 'Document studio',
+                  eyebrow: greetingFor(DateTime.now(), l10n),
+                  title: l10n.documentStudio,
                   trailing: CircleIconButton(
                     icon: Icons.more_horiz_rounded,
                     onTap: () => Navigator.of(context).push(
@@ -48,7 +49,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
                 const SizedBox(height: 28),
-                const SectionTitle(title: 'Quick actions'),
+                SectionTitle(title: l10n.quickActions),
                 const SizedBox(height: 14),
                 GridView.count(
                   crossAxisCount: 2,
@@ -60,32 +61,32 @@ class HomeScreen extends ConsumerWidget {
                   children: [
                     _QuickAction(
                       icon: Icons.photo_camera_outlined,
-                      title: 'Scan document',
-                      subtitle: 'Camera scan',
+                      title: l10n.scanDocument,
+                      subtitle: l10n.cameraScan,
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const ScanCameraScreen()),
                       ),
                     ),
                     _QuickAction(
                       icon: Icons.image_outlined,
-                      title: 'Image to PDF',
-                      subtitle: 'Photos to pages',
+                      title: l10n.imageToPdf,
+                      subtitle: l10n.photosToPages,
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const ImageToPdfScreen()),
                       ),
                     ),
                     _QuickAction(
                       icon: Icons.auto_fix_high_outlined,
-                      title: 'PDF tools',
-                      subtitle: 'Merge, split & more',
+                      title: l10n.pdfTools,
+                      subtitle: l10n.mergeSplitMore,
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const ToolsScreen(standalone: true)),
                       ),
                     ),
                     _QuickAction(
                       icon: Icons.folder_open_outlined,
-                      title: 'Recent files',
-                      subtitle: '${documents.length} documents',
+                      title: l10n.recentFiles,
+                      subtitle: l10n.documentsCount(documents.length),
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const FilesScreen(standalone: true)),
                       ),
@@ -94,14 +95,15 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 28),
                 SectionTitle(
-                  title: 'Recent files',
+                  title: l10n.recentFiles,
                   action: TextButton(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const FilesScreen(standalone: true)),
                     ),
                     child: Text(
-                      'See all',
-                      style: GoogleFonts.manrope(
+                      l10n.seeAll,
+                      style: studioText(
+                        context: context,
                         color: AppColors.primary,
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
@@ -112,9 +114,9 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 if (recent.isEmpty)
                   EmptyState(
-                    title: 'No documents yet',
-                    message: 'Scan a page or import photos to start your private studio.',
-                    actionLabel: 'Scan document',
+                    title: l10n.noDocumentsYet,
+                    message: l10n.emptyDocsMessage,
+                    actionLabel: l10n.scanDocument,
                     onAction: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const ScanCameraScreen()),
                     ),
@@ -132,9 +134,9 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 const SizedBox(height: 88),
                 Text(
-                  'Stored securely on this device.',
+                  l10n.storedSecurely,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.manrope(fontSize: 12, color: palette.mutedForeground),
+                  style: studioText(context: context, fontSize: 12, color: palette.mutedForeground),
                 ),
               ],
             ),
@@ -152,6 +154,7 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF12181F),
@@ -176,8 +179,9 @@ class _HeroCard extends StatelessWidget {
                 const Icon(Icons.circle, size: 8, color: AppColors.primary),
                 const SizedBox(width: 8),
                 Text(
-                  'READY TO CAPTURE',
-                  style: GoogleFonts.manrope(
+                  l10n.readyToCapture,
+                  style: studioText(
+                    context: context,
                     fontSize: 11,
                     letterSpacing: 1.2,
                     fontWeight: FontWeight.w700,
@@ -189,8 +193,9 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            'Turn paper into\nperfect PDF.',
-            style: GoogleFonts.manrope(
+            l10n.heroTitle,
+            style: studioText(
+              context: context,
               fontSize: 34,
               height: 1.05,
               fontWeight: FontWeight.w700,
@@ -200,12 +205,12 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Auto-detect edges, enhance clarity, and export in seconds.',
-            style: GoogleFonts.manrope(fontSize: 14, height: 1.4, color: AppColors.darkMutedForeground),
+            l10n.heroSubtitle,
+            style: studioText(context: context, fontSize: 14, height: 1.4, color: AppColors.darkMutedForeground),
           ),
           const SizedBox(height: 20),
           StudioButton(
-            label: 'Scan document',
+            label: l10n.scanDocument,
             icon: Icons.photo_camera_outlined,
             onPressed: onScan,
           ),
@@ -247,7 +252,8 @@ class _QuickAction extends StatelessWidget {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.manrope(
+            style: studioText(
+              context: context,
               fontSize: 15,
               fontWeight: FontWeight.w700,
               color: palette.cardForeground,
@@ -256,9 +262,10 @@ class _QuickAction extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             subtitle,
-            style: GoogleFonts.manrope(
+            style: studioText(
+              context: context,
               fontSize: 12,
-              color: palette.cardForeground.withValues(alpha: 0.5),
+              color: palette.cardForeground.withValues(alpha: 0.72),
             ),
           ),
         ],

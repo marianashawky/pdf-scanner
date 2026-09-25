@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/paper_visual.dart';
 import '../../core/widgets/studio_widgets.dart';
@@ -16,15 +16,17 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final palette = StudioPalette.of(context);
+    final l10n = AppLocalizations.of(context);
+    final locale = AppLocale.fromName(settings.localeCode);
 
     return Scaffold(
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(22, 12, 22, 120),
           children: [
-            const ScreenHeader(
-              title: 'Settings',
-              subtitle: 'Make the studio yours.',
+            ScreenHeader(
+              title: l10n.settings,
+              subtitle: l10n.makeStudioYours,
             ),
             const SizedBox(height: 22),
             StudioCard(
@@ -37,14 +39,72 @@ class SettingsScreen extends ConsumerWidget {
                   icon: settings.themeMode.isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
                 ),
                 title: Text(
-                  settings.themeMode.isDark ? 'Dark studio' : 'Light studio',
-                  style: GoogleFonts.manrope(fontWeight: FontWeight.w700, color: palette.cardForeground),
+                  settings.themeMode.isDark ? l10n.darkStudio : l10n.lightStudio,
+                  style: studioText(context: context, fontWeight: FontWeight.w700, color: palette.cardForeground),
                 ),
                 subtitle: Text(
-                  settings.themeMode.isDark ? 'Midnight paper workspace' : 'Bright paper workspace',
-                  style: GoogleFonts.manrope(fontSize: 12, color: palette.cardForeground.withValues(alpha: 0.5)),
+                  settings.themeMode.isDark ? l10n.darkStudioSub : l10n.lightStudioSub,
+                  style: studioText(
+                    context: context,
+                    fontSize: 12,
+                    color: palette.cardForeground.withValues(alpha: 0.72),
+                  ),
                 ),
                 onChanged: (_) => ref.read(settingsProvider.notifier).toggleTheme(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            StudioCard(
+              onTap: () => _chooseLanguage(context, ref, locale),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: Row(
+                children: [
+                  const IconWell(icon: Icons.language_rounded),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.language,
+                          style: studioText(context: context, fontWeight: FontWeight.w700, color: palette.cardForeground),
+                        ),
+                        Text(
+                          locale.nativeLabel,
+                          style: studioText(
+                            context: context,
+                            fontSize: 12,
+                            color: palette.cardForeground.withValues(alpha: 0.72),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: palette.cardForeground.withValues(alpha: 0.55)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            StudioCard(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                value: settings.autoEnhance,
+                activeThumbColor: AppColors.primary,
+                secondary: const IconWell(icon: Icons.auto_fix_high_rounded),
+                title: Text(
+                  l10n.autoEnhance,
+                  style: studioText(context: context, fontWeight: FontWeight.w700, color: palette.cardForeground),
+                ),
+                subtitle: Text(
+                  l10n.autoEnhanceSub,
+                  style: studioText(
+                    context: context,
+                    fontSize: 12,
+                    color: palette.cardForeground.withValues(alpha: 0.72),
+                  ),
+                ),
+                onChanged: (value) => ref.read(settingsProvider.notifier).setAutoEnhance(value),
               ),
             ),
             const SizedBox(height: 12),
@@ -58,10 +118,17 @@ class SettingsScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Local processing', style: GoogleFonts.manrope(fontWeight: FontWeight.w700, color: palette.cardForeground)),
                         Text(
-                          'Files never leave this device',
-                          style: GoogleFonts.manrope(fontSize: 12, color: palette.cardForeground.withValues(alpha: 0.5)),
+                          l10n.localProcessing,
+                          style: studioText(context: context, fontWeight: FontWeight.w700, color: palette.cardForeground),
+                        ),
+                        Text(
+                          l10n.filesNeverLeave,
+                          style: studioText(
+                            context: context,
+                            fontSize: 12,
+                            color: palette.cardForeground.withValues(alpha: 0.72),
+                          ),
                         ),
                       ],
                     ),
@@ -82,15 +149,22 @@ class SettingsScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Default quality', style: GoogleFonts.manrope(fontWeight: FontWeight.w700, color: palette.cardForeground)),
                         Text(
-                          settings.quality.label,
-                          style: GoogleFonts.manrope(fontSize: 12, color: palette.cardForeground.withValues(alpha: 0.5)),
+                          l10n.defaultQuality,
+                          style: studioText(context: context, fontWeight: FontWeight.w700, color: palette.cardForeground),
+                        ),
+                        Text(
+                          l10n.qualityLabel(settings.quality),
+                          style: studioText(
+                            context: context,
+                            fontSize: 12,
+                            color: palette.cardForeground.withValues(alpha: 0.72),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  Icon(Icons.chevron_right_rounded, color: palette.cardForeground.withValues(alpha: 0.4)),
+                  Icon(Icons.chevron_right_rounded, color: palette.cardForeground.withValues(alpha: 0.55)),
                 ],
               ),
             ),
@@ -106,15 +180,22 @@ class SettingsScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Help & tips', style: GoogleFonts.manrope(fontWeight: FontWeight.w700, color: palette.cardForeground)),
                         Text(
-                          'Learn the essentials',
-                          style: GoogleFonts.manrope(fontSize: 12, color: palette.cardForeground.withValues(alpha: 0.5)),
+                          l10n.helpTips,
+                          style: studioText(context: context, fontWeight: FontWeight.w700, color: palette.cardForeground),
+                        ),
+                        Text(
+                          l10n.learnEssentials,
+                          style: studioText(
+                            context: context,
+                            fontSize: 12,
+                            color: palette.cardForeground.withValues(alpha: 0.72),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  Icon(Icons.chevron_right_rounded, color: palette.cardForeground.withValues(alpha: 0.4)),
+                  Icon(Icons.chevron_right_rounded, color: palette.cardForeground.withValues(alpha: 0.55)),
                 ],
               ),
             ),
@@ -128,8 +209,8 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Clear local documents',
-                      style: GoogleFonts.manrope(fontWeight: FontWeight.w700, color: palette.cardForeground),
+                      l10n.clearLocalDocs,
+                      style: studioText(context: context, fontWeight: FontWeight.w700, color: palette.cardForeground),
                     ),
                   ),
                 ],
@@ -139,15 +220,15 @@ class SettingsScreen extends ConsumerWidget {
             const ScanMarkIcon(color: AppColors.primary, size: 36),
             const SizedBox(height: 10),
             Text(
-              AppConstants.appName,
+              l10n.appName,
               textAlign: TextAlign.center,
-              style: GoogleFonts.manrope(fontSize: 18, fontWeight: FontWeight.w700, color: palette.foreground),
+              style: studioText(context: context, fontSize: 18, fontWeight: FontWeight.w700, color: palette.foreground),
             ),
             const SizedBox(height: 4),
             Text(
-              AppConstants.versionLabel,
+              l10n.versionLabel,
               textAlign: TextAlign.center,
-              style: GoogleFonts.manrope(fontSize: 13, color: palette.mutedForeground),
+              style: studioText(context: context, fontSize: 13, color: palette.mutedForeground),
             ),
           ],
         ),
@@ -155,8 +236,9 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _chooseQuality(BuildContext context, WidgetRef ref, ScanQuality current) async {
-    final next = await showModalBottomSheet<ScanQuality>(
+  Future<void> _chooseLanguage(BuildContext context, WidgetRef ref, AppLocale current) async {
+    final l10n = AppLocalizations.of(context);
+    final next = await showModalBottomSheet<AppLocale>(
       context: context,
       backgroundColor: StudioPalette.of(context).card,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
@@ -166,10 +248,56 @@ class SettingsScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.chooseLanguage,
+                  style: studioText(context: context, fontWeight: FontWeight.w800, fontSize: 18),
+                ),
+                const SizedBox(height: 8),
+                ...AppLocale.values.map((locale) {
+                  return ListTile(
+                    title: Text(
+                      locale.nativeLabel,
+                      style: studioText(context: context, fontWeight: FontWeight.w700, color: StudioPalette.of(context).cardForeground),
+                    ),
+                    trailing: locale == current ? const Icon(Icons.check_rounded, color: AppColors.primary) : null,
+                    onTap: () => Navigator.pop(context, locale),
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (next != null) {
+      await ref.read(settingsProvider.notifier).setLocaleCode(next.name);
+    }
+  }
+
+  Future<void> _chooseQuality(BuildContext context, WidgetRef ref, ScanQuality current) async {
+    final l10n = AppLocalizations.of(context);
+    final next = await showModalBottomSheet<ScanQuality>(
+      context: context,
+      backgroundColor: StudioPalette.of(context).card,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (context) {
+        final palette = StudioPalette.of(context);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: ScanQuality.values.map((quality) {
                 return ListTile(
-                  title: Text(quality.label, style: GoogleFonts.manrope(fontWeight: FontWeight.w700)),
-                  subtitle: Text(quality.subtitle),
+                  title: Text(
+                    l10n.qualityLabel(quality),
+                    style: studioText(context: context, fontWeight: FontWeight.w700, color: palette.cardForeground),
+                  ),
+                  subtitle: Text(
+                    l10n.qualitySubtitle(quality),
+                    style: studioText(context: context, color: palette.cardForeground.withValues(alpha: 0.7)),
+                  ),
                   trailing: quality == current ? const Icon(Icons.check_rounded, color: AppColors.primary) : null,
                   onTap: () => Navigator.pop(context, quality),
                 );
@@ -185,15 +313,16 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Future<void> _clear(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Clear all documents?'),
-          content: const Text('This permanently deletes locally stored PDFs from this device.'),
+          title: Text(l10n.clearAllTitle),
+          content: Text(l10n.clearAllBody),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Clear')),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
+            TextButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.clear)),
           ],
         );
       },

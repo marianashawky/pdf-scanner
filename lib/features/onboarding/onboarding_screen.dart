@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/paper_visual.dart';
 import '../../core/widgets/studio_widgets.dart';
@@ -18,27 +18,6 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _controller = PageController();
   int _page = 0;
-
-  final _pages = const [
-    _OnboardPage(
-      eyebrow: 'PRIVATE BY DESIGN',
-      title: 'Your documents stay here.',
-      body: 'Every scan, merge, and export is processed on this device. Nothing is uploaded.',
-      icon: Icons.verified_user_outlined,
-    ),
-    _OnboardPage(
-      eyebrow: 'STUDIO QUALITY',
-      title: 'Turn paper into a perfect PDF.',
-      body: 'Auto-detect edges, correct perspective, and polish pages with color, grayscale, or B&W.',
-      icon: Icons.auto_fix_high_outlined,
-    ),
-    _OnboardPage(
-      eyebrow: 'READY TO CAPTURE',
-      title: 'A private document studio.',
-      body: 'Scan multi-page files, import photos, then merge, split, compress, and share locally.',
-      icon: Icons.crop_free_rounded,
-    ),
-  ];
 
   Future<void> _finish() async {
     await ref.read(settingsProvider.notifier).completeOnboarding();
@@ -60,7 +39,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final last = _page == _pages.length - 1;
+    final l10n = AppLocalizations.of(context);
+    final pages = [
+      _OnboardPage(
+        eyebrow: l10n.onboard1Eyebrow,
+        title: l10n.onboard1Title,
+        body: l10n.onboard1Body,
+        icon: Icons.verified_user_outlined,
+      ),
+      _OnboardPage(
+        eyebrow: l10n.onboard2Eyebrow,
+        title: l10n.onboard2Title,
+        body: l10n.onboard2Body,
+        icon: Icons.auto_fix_high_outlined,
+      ),
+      _OnboardPage(
+        eyebrow: l10n.onboard3Eyebrow,
+        title: l10n.onboard3Title,
+        body: l10n.onboard3Body,
+        icon: Icons.crop_free_rounded,
+      ),
+    ];
+    final last = _page == pages.length - 1;
+
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
       body: SafeArea(
@@ -69,26 +70,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           child: Column(
             children: [
               Align(
-                alignment: Alignment.centerRight,
+                alignment: AlignmentDirectional.centerEnd,
                 child: TextButton(
                   onPressed: _finish,
                   child: Text(
-                    'Skip',
-                    style: GoogleFonts.manrope(color: AppColors.darkMutedForeground, fontWeight: FontWeight.w600),
+                    l10n.skip,
+                    style: studioText(
+                      context: context,
+                      color: AppColors.darkMutedForeground,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
               Expanded(
                 child: PageView.builder(
                   controller: _controller,
-                  itemCount: _pages.length,
+                  itemCount: pages.length,
                   onPageChanged: (value) => setState(() => _page = value),
-                  itemBuilder: (_, index) => _pages[index],
+                  itemBuilder: (_, index) => pages[index],
                 ),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(_pages.length, (index) {
+                children: List.generate(pages.length, (index) {
                   final active = index == _page;
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 220),
@@ -104,7 +109,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
               const SizedBox(height: 22),
               StudioButton(
-                label: last ? 'Enter your studio  >' : 'Continue',
+                label: last ? l10n.enterStudio : l10n.continueLabel,
                 onPressed: () {
                   if (last) {
                     _finish();
@@ -143,7 +148,8 @@ class _OnboardPage extends StatelessWidget {
         const SizedBox(height: 32),
         Text(
           eyebrow,
-          style: GoogleFonts.manrope(
+          style: studioText(
+            context: context,
             fontSize: 12,
             letterSpacing: 2.2,
             fontWeight: FontWeight.w700,
@@ -154,7 +160,8 @@ class _OnboardPage extends StatelessWidget {
         Text(
           title,
           textAlign: TextAlign.center,
-          style: GoogleFonts.manrope(
+          style: studioText(
+            context: context,
             fontSize: 32,
             height: 1.1,
             fontWeight: FontWeight.w700,
@@ -166,7 +173,7 @@ class _OnboardPage extends StatelessWidget {
         Text(
           body,
           textAlign: TextAlign.center,
-          style: GoogleFonts.manrope(fontSize: 15, height: 1.45, color: AppColors.darkMutedForeground),
+          style: studioText(context: context, fontSize: 15, height: 1.45, color: AppColors.darkMutedForeground),
         ),
         const Spacer(),
       ],

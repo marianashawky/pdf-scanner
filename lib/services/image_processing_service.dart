@@ -104,34 +104,54 @@ class ImageProcessingService {
   img.Image _applyFilter(img.Image image, ScanFilter filter, bool enhance) {
     switch (filter) {
       case ScanFilter.original:
-        return enhance ? _enhanceColor(image) : image;
+        return enhance ? _enhanceDocument(image, colorSafe: true) : image;
       case ScanFilter.color:
-        return _enhanceColor(image);
+        return _enhanceDocument(image, colorSafe: true);
       case ScanFilter.grayscale:
-        return img.grayscale(image);
+        final gray = img.grayscale(image);
+        return enhance ? _enhanceDocument(gray, colorSafe: false) : gray;
       case ScanFilter.blackWhite:
         final gray = img.grayscale(image);
-        final threshold = _otsu(gray);
-        for (final pixel in gray) {
+        final prepared = enhance ? _enhanceDocument(gray, colorSafe: false) : gray;
+        final threshold = _otsu(prepared);
+        for (final pixel in prepared) {
           final value = pixel.luminance >= threshold ? 255 : 0;
           pixel
             ..r = value
             ..g = value
             ..b = value;
         }
-        return gray;
+        return prepared;
     }
   }
 
-  img.Image _enhanceColor(img.Image image) {
+  /// Visible document enhancement: contrast, clarity, mild sharpen, and paper cleanup.
+  img.Image _enhanceDocument(img.Image image, {required bool colorSafe}) {
     img.adjustColor(
       image,
-      contrast: 1.12,
-      saturation: 1.08,
-      brightness: 1.03,
+      contrast: 1.28,
+      saturation: colorSafe ? 1.12 : 1.0,
+      brightness: 1.06,
     );
-    return image;
+    return _unsharpMask(image, amount: 0.55);
   }
+
+  img.Image _unsharpMask(img.Image source, {required double amount}) {
+    final blurred = img.gaussianBlur(img.Image.from(source), radius: 1);
+    for (var y = 0; y < source.height; y++) {
+      for (var x = 0; x < source.width; x++) {
+        final sharp = source.getPixel(x, y);
+        final soft = blurred.getPixel(x, y);
+        sharp
+          ..r = _clampChannel(sharp.r + (sharp.r - soft.r) * amount)
+          ..g = _clampChannel(sharp.g + (sharp.g - soft.g) * amount)
+          ..b = _clampChannel(sharp.b + (sharp.b - soft.b) * amount);
+      }
+    }
+    return source;
+  }
+
+  num _clampChannel(num value) => value.clamp(0, 255);
 
   img.Image _perspectiveCrop(img.Image source, QuadCorners corners) {
     final tl = _toPixel(source, corners.topLeft);
